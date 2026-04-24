@@ -2,11 +2,13 @@ package com.github.nicolas_kogus.SystemLibrarySpring.User.service;
 
 import com.github.nicolas_kogus.SystemLibrarySpring.User.model.User;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.repository.UserRepository;
+import jakarta.persistence.GeneratedValue;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Service class responsible for handling business logic related to Users.
@@ -48,4 +50,8 @@ public class UserService {
     **/
 
     public List<User> listAllUsers() {return repository.findAll();}
+
+    public User updateUser(@RequestBody User user) {
+        return repository.save(user);
+    }
 }

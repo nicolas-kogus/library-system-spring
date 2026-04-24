@@ -13,15 +13,22 @@ import java.util.List;
 public class UserController {
 
     @Autowired
-    private UserService userService;
+    private UserService service;
 
     @PostMapping("/save-user")
     public ResponseEntity<?> saveUser(@RequestBody User user) {
-        return userService.registerUser(user);
+        return service.registerUser(user);
+    }
+
+    @PostMapping("/{id}")
+    public User updateUser(@RequestBody User user, @PathVariable(name = "id") Long id) {
+        user.setUserId(id);
+        return service.updateUser(user);
     }
 
     @GetMapping("/list-allUsers")
     public List<User> findAllUsers() {
-        return userService.listAllUsers();
+        return service.listAllUsers();
     }
+
 }
