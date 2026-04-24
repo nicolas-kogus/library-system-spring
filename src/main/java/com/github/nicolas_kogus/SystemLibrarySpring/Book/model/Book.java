@@ -1,5 +1,6 @@
 package com.github.nicolas_kogus.SystemLibrarySpring.Book.model;
 
+import com.github.nicolas_kogus.SystemLibrarySpring.Book.enums.BookStatus;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.model.User;
 import jakarta.persistence.*;
 
@@ -13,7 +14,7 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long bookId;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)
@@ -22,6 +23,9 @@ public class Book {
     @Column(nullable = false)
     private LocalDate yearOfPublication;
 
+    @Enumerated(EnumType.STRING)
+    private BookStatus bookStatus;
+
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
@@ -29,10 +33,11 @@ public class Book {
     public Book() {
     }
 
-    public Book(String name, String author, LocalDate yearOfPublication, User user) {
+    public Book(String name, String author, LocalDate yearOfPublication, BookStatus bookStatus, User user) {
         this.name = name;
         this.author = author;
         this.yearOfPublication = yearOfPublication;
+        this.bookStatus = bookStatus;
         this.user = user;
     }
 
@@ -68,6 +73,14 @@ public class Book {
         this.yearOfPublication = yearOfPublication;
     }
 
+    public BookStatus getBookStatus() {
+        return bookStatus;
+    }
+
+    public void setBookStatus(BookStatus bookStatus) {
+        this.bookStatus = bookStatus;
+    }
+
     public User getUser() {
         return user;
     }
@@ -83,6 +96,7 @@ public class Book {
                 ", name='" + name + '\'' +
                 ", author='" + author + '\'' +
                 ", yearOfPublication=" + yearOfPublication +
+                ", bookStatus=" + bookStatus +
                 ", user=" + user +
                 '}';
     }

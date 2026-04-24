@@ -1,9 +1,9 @@
 package com.github.nicolas_kogus.SystemLibrarySpring.User.controller;
 
-import com.github.nicolas_kogus.SystemLibrarySpring.Book.model.Book;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.model.User;
-import com.github.nicolas_kogus.SystemLibrarySpring.User.repository.UserRepository;
+import com.github.nicolas_kogus.SystemLibrarySpring.User.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,15 +13,15 @@ import java.util.List;
 public class UserController {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @PostMapping("/save-user")
-    public User saveUser(@RequestBody User user) {
-        return userRepository.save(user);
+    public ResponseEntity<?> saveUser(@RequestBody User user) {
+        return userService.registerUser(user);
     }
 
     @GetMapping("/list-allUsers")
     public List<User> findAllUsers() {
-        return userRepository.findAll();
+        return userService.listAllUsers();
     }
 }
