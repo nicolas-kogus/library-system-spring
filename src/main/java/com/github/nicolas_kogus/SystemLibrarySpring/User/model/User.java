@@ -15,8 +15,8 @@ public class User {
     private String name;
     private String password;
 
-    @OneToMany
-    @JoinColumn(name = "bookId")
+    @ManyToOne
+    @JoinColumn(name = "book_id")
     private List<Book> books;
 
     public User() {
