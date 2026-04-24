@@ -1,22 +1,29 @@
 package com.github.nicolas_kogus.SystemLibrarySpring.Book.model;
 
 import com.github.nicolas_kogus.SystemLibrarySpring.User.model.User;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
-@Table(name = "tb_book")
+@Table(name = "tb_books")
 public class Book {
 
-    private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long bookId;
+
+    @Column(unique = true, nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private String author;
+
+    @Column(nullable = false)
     private LocalDate yearOfPublication;
 
+    @ManyToOne
+    @JoinColumn(name = "userId")
     private User user;
 
     public Book() {
@@ -29,12 +36,12 @@ public class Book {
         this.user = user;
     }
 
-    public Long getId() {
-        return id;
+    public Long getBookId() {
+        return bookId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setBookId(Long bookId) {
+        this.bookId = bookId;
     }
 
     public String getName() {
@@ -72,7 +79,7 @@ public class Book {
     @Override
     public String toString() {
         return "Book{" +
-                "id=" + id +
+                "bookId=" + bookId +
                 ", name='" + name + '\'' +
                 ", author='" + author + '\'' +
                 ", yearOfPublication=" + yearOfPublication +
