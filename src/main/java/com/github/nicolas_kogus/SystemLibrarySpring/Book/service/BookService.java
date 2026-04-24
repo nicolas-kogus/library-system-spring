@@ -6,6 +6,9 @@ import com.github.nicolas_kogus.SystemLibrarySpring.Book.repository.BookReposito
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
+
 /**
  * Service class for managing book-related business operations.
  */
@@ -30,6 +33,7 @@ public class BookService {
      * @return a ResponseEntity containing the saved book object on success, 
      *         or an error message if the book already exists.
      */
+
     public ResponseEntity<?> registerBook(Book book) {
         // Check if a book with the same name already exists in the database
         if (repository.existsByName(book.getName())) {
@@ -37,9 +41,25 @@ public class BookService {
         }
 
         // Initialize book status as available before persisting
-        book.setBookStatus(BookStatus.BOOK_AVAILABLE);
+        setBookAvailable(book);
 
         // Save the book entity and return the result
         return ResponseEntity.ok(repository.save(book));
+    }
+
+    public void setBookAvailable(Book book) {
+        book.setBookStatus(BookStatus.BOOK_AVAILABLE);
+    }
+
+    public void setBookRented(Book book) {
+        book.setBookStatus(BookStatus.RENTED_BOOK);
+    }
+
+    public Optional<Book> locateById(Long id) {
+        return repository.findById(id);
+    }
+
+    public Book save(Book book) {
+        return repository.save(book);
     }
 }

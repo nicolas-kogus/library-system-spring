@@ -3,6 +3,7 @@ package com.github.nicolas_kogus.SystemLibrarySpring.Book.model;
 import com.github.nicolas_kogus.SystemLibrarySpring.Book.enums.BookStatus;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.model.User;
 import jakarta.persistence.*;
+import org.springframework.context.annotation.Bean;
 
 import java.time.LocalDate;
 
@@ -100,4 +101,5 @@ public class Book {
                 ", user=" + user +
                 '}';
     }
+
 }
