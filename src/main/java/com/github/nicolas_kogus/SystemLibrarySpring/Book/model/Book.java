@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
+/**
+ * Entity representing a Book in the library system.
+ */
 @Entity
 @Table(name = "tb_books")
 public class Book {
@@ -23,9 +26,11 @@ public class Book {
     @Column(nullable = false)
     private LocalDate yearOfPublication;
 
+    // Maps the enum to a String representation in the database
     @Enumerated(EnumType.STRING)
     private BookStatus bookStatus;
 
+    // Defines a many-to-one relationship with a User (the borrower)
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
