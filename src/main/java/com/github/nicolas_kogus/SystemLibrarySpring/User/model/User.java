@@ -36,8 +36,9 @@ public class User {
      * A list of books associated with this user (e.g., currently borrowed).
      * Relationship corrected to @OneToMany as one user can have multiple books.
      */
-    @OneToMany(mappedBy = "user")
-    private List<Book> books;
+    @OneToOne
+    @JoinColumn(name = "book_id")
+    private Book book;
 
     /**
      * Default constructor required by JPA.
@@ -50,12 +51,12 @@ public class User {
      * 
      * @param name     The name of the user.
      * @param password The account password.
-     * @param books    The initial list of books assigned to the user.
+     * @param book    The initial list of books assigned to the user.
      */
-    public User(String name, String password, List<Book> books) {
+    public User(String name, String password, Book book) {
         this.name = name;
         this.password = password;
-        this.books = books;
+        this.book = book;
     }
 
     /**
@@ -103,15 +104,15 @@ public class User {
     /**
      * @return The list of books owned/borrowed by the user.
      */
-    public List<Book> getBooks() {
-        return books;
+    public Book getBooks() {
+        return book;
     }
 
     /**
-     * @param books The list of books to associate with the user.
+     * @param book The list of books to associate with the user.
      */
-    public void setBooks(List<Book> books) {
-        this.books = books;
+    public void setBooks(Book book) {
+        this.book = book;
     }
 
     /**
@@ -124,7 +125,7 @@ public class User {
                 "userId=" + userId +
                 ", name='" + name + '\'' +
                 ", password='" + password + '\'' +
-                ", books=" + books +
+                ", books=" + book +
                 '}';
     }
 }
