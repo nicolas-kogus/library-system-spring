@@ -6,8 +6,6 @@ import com.github.nicolas_kogus.SystemLibrarySpring.Book.service.BookService;
 import com.github.nicolas_kogus.SystemLibrarySpring.Loan.model.Loan;
 import com.github.nicolas_kogus.SystemLibrarySpring.Loan.repository.LoanRepository;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.repository.UserRepository;
-import org.apache.coyote.Response;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,17 +46,31 @@ public class LoanService {
 
     /**
      * Records a new loan, updates the book's availability status, and assigns the borrower.
-     * 
+     * This operation is transactional to ensure data consistency across multiple entities.
+     *
      * @param loan The loan details containing bookId and userId.
      * @return The saved Loan entity.
+     * @throws RuntimeException if the user already has an active book loan.
+     * @throws NullPointerException if the book or user is not found in the database.
      */
-    @Transactional // Ensures that if one save fails, the entire operation is rolled back
+    @Transactional // Ensures that if any part of the process fails, the entire operation is rolled back
     public Loan saveLoan(Loan loan) {
         // 1. Attempt to find the book associated with the loan request
-        Optional<Book> opBook = bookService.locateById(loan.getBookId());
+        Optional<Book> optionalBook = bookService.locateById(loan.getBookId());
 
-        if (opBook.isPresent()) {
-            Book book = opBook.get();
+            if (optionalBook.isPresent()) {
+
+                // Check user eligibility: Business rule states a user can only have one active loan at a time.
+                // We fetch the user and verify if their 'books' reference is already populated.
+                if (userRepository.findById(loan.getUserId()).get().getBooks() != null) {
+
+                    // If the user already has a book, prevent the loan creation.
+                    throw new RuntimeException("This user already has a borrowed book.");
+
+                }
+
+            // Extract the book from the optional container now that we know it exists.
+            Book book = optionalBook.get();
 
             // 2. Update book availability status to rented
             bookService.setBookRented(book);
@@ -68,7 +80,7 @@ public class LoanService {
                     .orElseThrow(() -> new NullPointerException("User not found.")));
 
             // 4. Update the relationship on the user side by linking the book to the user's collection
-            opBook.get().getUser().setBooks(bookRepository.findById(loan.getBookId()).orElseThrow());
+            optionalBook.get().getUser().setBooks(bookRepository.findById(loan.getBookId()).orElseThrow());
 
             // 5. Persist the changes made to the book entity (status and user association)
             bookService.save(book);
@@ -77,6 +89,8 @@ public class LoanService {
             // Fail fast if the book is not found in the database
             throw new NullPointerException("Book not found");
         }
+
+
 
         // 6. Finally, persist the loan record itself
         return loanRepository.save(loan);

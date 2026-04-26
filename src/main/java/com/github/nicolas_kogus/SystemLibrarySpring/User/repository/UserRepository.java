@@ -1,5 +1,6 @@
 package com.github.nicolas_kogus.SystemLibrarySpring.User.repository;
 
+import com.github.nicolas_kogus.SystemLibrarySpring.Book.model.Book;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -33,4 +34,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return {@code true} if a user with the given name exists, {@code false} otherwise.
      */
     Boolean existsByName(String name);
+    Boolean existsByBook(Book book);
 }
