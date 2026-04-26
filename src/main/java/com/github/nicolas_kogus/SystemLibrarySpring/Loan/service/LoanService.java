@@ -3,15 +3,17 @@ package com.github.nicolas_kogus.SystemLibrarySpring.Loan.service;
 import com.github.nicolas_kogus.SystemLibrarySpring.Book.model.Book;
 import com.github.nicolas_kogus.SystemLibrarySpring.Book.repository.BookRepository;
 import com.github.nicolas_kogus.SystemLibrarySpring.Book.service.BookService;
+import com.github.nicolas_kogus.SystemLibrarySpring.Loan.exception.GlobalExceptionHandler;
+import com.github.nicolas_kogus.SystemLibrarySpring.Loan.exception.ResourceNotFound;
 import com.github.nicolas_kogus.SystemLibrarySpring.Loan.model.Loan;
 import com.github.nicolas_kogus.SystemLibrarySpring.Loan.repository.LoanRepository;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.model.User;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.repository.UserRepository;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
@@ -34,6 +36,10 @@ public class LoanService {
 
     /** Service containing business logic for User management. */
     private final UserService userService;
+
+    /** Global handler for capturing and processing exceptions across the application. */
+    @Autowired
+    private GlobalExceptionHandler globalExceptionHandler;
 
     /**
      * Constructs a new LoanService with required dependencies.
@@ -85,17 +91,20 @@ public class LoanService {
 
             // 3. Associate the user with the book. Throws exception if user ID is invalid.
             book.setUser(userRepository.findById(loan.getUserId())
-                    .orElseThrow(() -> new NullPointerException("User not found.")));
+                    .orElseThrow(() -> new ResourceNotFound("User not found.")));
+            // Note: .get() is used here assuming the user exists based on the previous check.
 
             // 4. Update the relationship on the user side by linking the book to the user's collection
+            // This maintains the bidirectional consistency between User and Book entities.
             optionalBook.get().getUser().setBooks(bookRepository.findById(loan.getBookId()).orElseThrow());
 
             // 5. Persist the changes made to the book entity (status and user association)
             bookService.save(book);
             
         } else {
-            // Fail fast if the book is not found in the database
-            throw new NullPointerException("Book not found");
+                // Logical branch: If the book does not exist, we cannot proceed with the loan.
+                // Fail fast if the book is not found in the database
+                throw new ResourceNotFound("Book not found.");
         }
 
         // 6. Finally, persist the loan record itself
@@ -106,11 +115,10 @@ public class LoanService {
      * Retrieves a loan record by its unique identifier.
      *
      * @param id The ID of the loan to retrieve.
-     * @return The Loan entity if found.
+     * @return The Loan entity if found, or null if it does not exist.
      * @throws NullPointerException if the loan does not exist.
      */
-    public Loan findLoanById(Long id) {return loanRepository.findById(id)
-            .orElseThrow(() -> new NullPointerException("Loan not found"));}
+    public Loan findLoanById(Long id) {return loanRepository.findById(id).orElse(null);}
 
     /**
      * Deletes a loan record and resets the associated book and user states.
@@ -120,17 +128,25 @@ public class LoanService {
      */
     @Transactional
     public void deleteLoanById(Long loanId) {
+
+        // First check: Ensure the loan exists before attempting to clean up associations.
+        if(findLoanById(loanId) == null) {
+            throw new ResourceNotFound("Loan not found.");
+        }
+
         // Fetch the loan to get reference to the user and book IDs
         Optional<Loan> loan = Optional.ofNullable(findLoanById(loanId));
 
         if (loan.isPresent()) {
 
             // Retrieve the specific user and book entities involved in the loan
+            // These are needed to reset their states back to "available/unassigned".
             User user = userRepository.findById(loan.get().getUserId()).orElseThrow();
             Book book = bookRepository.findById(loan.get().getBookId()).orElseThrow();
 
             // Dissociate the book from the user entity
             user.setBooks(null);
+
             // Dissociate the user from the book entity
             book.setUser(null);
             // Update the book's status to reflect availability
@@ -138,12 +154,13 @@ public class LoanService {
 
         } else {
 
-            // Throw exception if the loan to be deleted is not found
-            throw new NullPointerException("Loan not found.");
+            // Redundant safety check: Throw exception if the loan is missing during the process.
+            throw new ResourceNotFound("Loan not found.");
 
         }
 
         // Remove the loan record from the database
+        // The @Transactional annotation ensures that the record is only removed if all previous steps succeed.
         loanRepository.deleteById(loanId);
 
     }
