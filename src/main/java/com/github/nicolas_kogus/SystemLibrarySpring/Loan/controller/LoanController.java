@@ -2,10 +2,7 @@ package com.github.nicolas_kogus.SystemLibrarySpring.Loan.controller;
 
 import com.github.nicolas_kogus.SystemLibrarySpring.Loan.model.Loan;
 import com.github.nicolas_kogus.SystemLibrarySpring.Loan.service.LoanService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * REST Controller that handles HTTP requests related to Loan operations.
@@ -37,4 +34,7 @@ public class LoanController {
     public Loan createLoan(@RequestBody Loan loan) {
         return service.saveLoan(loan);
     }
+
+    @DeleteMapping("delete-loan/{id}")
+    public void deleteLoanById(@PathVariable(name = "id") Long id) {service.deleteLoanById(id);}
 }

@@ -5,6 +5,7 @@ import com.github.nicolas_kogus.SystemLibrarySpring.Book.model.Book;
 import com.github.nicolas_kogus.SystemLibrarySpring.Book.repository.BookRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -55,11 +56,14 @@ public class BookService {
         book.setBookStatus(BookStatus.RENTED_BOOK);
     }
 
-    public Optional<Book> locateById(Long id) {
-        return repository.findById(id);
-    }
+    public Optional<Book> locateById(Long id) {return repository.findById(id);}
 
     public Book save(Book book) {
         return repository.save(book);
+    }
+
+    @Transactional
+    public void deleteBookById(Long id) {
+        repository.deleteById(id);
     }
 }

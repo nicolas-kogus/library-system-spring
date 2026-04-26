@@ -5,10 +5,13 @@ import com.github.nicolas_kogus.SystemLibrarySpring.Book.repository.BookReposito
 import com.github.nicolas_kogus.SystemLibrarySpring.Book.service.BookService;
 import com.github.nicolas_kogus.SystemLibrarySpring.Loan.model.Loan;
 import com.github.nicolas_kogus.SystemLibrarySpring.Loan.repository.LoanRepository;
+import com.github.nicolas_kogus.SystemLibrarySpring.User.model.User;
 import com.github.nicolas_kogus.SystemLibrarySpring.User.repository.UserRepository;
+import com.github.nicolas_kogus.SystemLibrarySpring.User.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
@@ -29,6 +32,9 @@ public class LoanService {
     /** Service containing business logic for Book management. */
     private final BookService bookService;
 
+    /** Service containing business logic for User management. */
+    private final UserService userService;
+
     /**
      * Constructs a new LoanService with required dependencies.
      * Uses constructor injection for better testability and to follow Spring best practices.
@@ -36,12 +42,14 @@ public class LoanService {
      * @param userRepository the repository for users
      * @param bookService the service for book-related operations
      * @param bookRepository the repository for books
+     * @param userService the service for user-related operations
      */
-    public LoanService(LoanRepository loanRepository, UserRepository userRepository, BookService bookService, BookRepository bookRepository) {
+    public LoanService(LoanRepository loanRepository, UserRepository userRepository, BookService bookService, BookRepository bookRepository, UserService userService) {
         this.loanRepository = loanRepository;
         this.userRepository = userRepository;
         this.bookService = bookService;
         this.bookRepository = bookRepository;
+        this.userService = userService;
     }
 
     /**
@@ -90,9 +98,53 @@ public class LoanService {
             throw new NullPointerException("Book not found");
         }
 
-
-
         // 6. Finally, persist the loan record itself
         return loanRepository.save(loan);
+    }
+
+    /**
+     * Retrieves a loan record by its unique identifier.
+     *
+     * @param id The ID of the loan to retrieve.
+     * @return The Loan entity if found.
+     * @throws NullPointerException if the loan does not exist.
+     */
+    public Loan findLoanById(Long id) {return loanRepository.findById(id)
+            .orElseThrow(() -> new NullPointerException("Loan not found"));}
+
+    /**
+     * Deletes a loan record and resets the associated book and user states.
+     * This operation ensures the book becomes available again and the user's reference is cleared.
+     *
+     * @param loanId The ID of the loan to be deleted.
+     */
+    @Transactional
+    public void deleteLoanById(Long loanId) {
+        // Fetch the loan to get reference to the user and book IDs
+        Optional<Loan> loan = Optional.ofNullable(findLoanById(loanId));
+
+        if (loan.isPresent()) {
+
+            // Retrieve the specific user and book entities involved in the loan
+            User user = userRepository.findById(loan.get().getUserId()).orElseThrow();
+            Book book = bookRepository.findById(loan.get().getBookId()).orElseThrow();
+
+            // Dissociate the book from the user entity
+            user.setBooks(null);
+            // Dissociate the user from the book entity
+            book.setUser(null);
+            // Update the book's status to reflect availability
+            bookService.setBookAvailable(book);
+
+        } else {
+
+            // Throw exception if the loan to be deleted is not found
+            throw new NullPointerException("Loan not found.");
+
+        }
+
+        // Remove the loan record from the database
+        loanRepository.deleteById(loanId);
+
     }
 }

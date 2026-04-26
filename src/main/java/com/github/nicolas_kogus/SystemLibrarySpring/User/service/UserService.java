@@ -54,4 +54,6 @@ public class UserService {
     public User updateUser(@RequestBody User user) {
         return repository.save(user);
     }
+
+    public void deleteUserById(Long id) {repository.deleteById(id);}
 }
